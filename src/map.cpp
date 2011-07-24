@@ -17,7 +17,7 @@
 
 Map::Map()
 {
-    viewConway = false;
+    viewLife = false;
 }
 
 void Map::setup( int w, int h )
@@ -35,10 +35,11 @@ void Map::setup( int w, int h )
             tiles[x][y].x = x * spacing + 0.5 * spacing;
             tiles[x][y].y = y * spacing + 0.5 * spacing;
             
-            tiles[x][y].height = 1.0;
+            tiles[x][y].height = 0.0;
             
-            // set 5 percent of the initial tiles to alive:
-            tiles[x][y].alive = ci::Rand::randFloat() < 0.05 ? 1 : 0;            
+            // set a percentage of the initial tiles to alive:
+            tiles[x][y].alive = ci::Rand::randFloat() < 0.8 ? 1 : 0;
+            tiles[x][y].newState = tiles[x][y].alive;
         }
     }
 }
@@ -52,6 +53,8 @@ void Map::update()
         {
             int n = 0;
             
+            // count neighbours that are alive:
+            
             if ( tiles[x - 1][y - 1].alive ) n++;
             if ( tiles[x + 0][y - 1].alive ) n++;
             if ( tiles[x + 1][y - 1].alive ) n++;
@@ -63,25 +66,57 @@ void Map::update()
             if ( tiles[x + 0][y + 1].alive ) n++;
             if ( tiles[x + 1][y + 1].alive ) n++;
             
-            if ( tiles[x][y].alive && ( n < 2 || n > 3 ) )
+            
+            // This is where the cellular automata rules are defined.
+            
+            // Rules are defined as:
+            // S: neighbours necessary to survive.
+            // B: neighbours necessary to be born.
+            
+            // For a big list of different rules visit:
+            // http://www.mirekw.com/ca/rullex_life.html
+            
+            // great examples are (S/B):
+            // 2x2: 125/36
+            // conway's: 23/3
+            // mine: 1258/357, 23/356
+            
+            if ( tiles[x][y].alive &&
+                !( 
+                        // survival: 
+                        n == 2 ||
+                        n == 3 ) )
             {
-                tiles[x][y].alive = false;
-                tiles[x][y].height -= 0.05;
+                tiles[x][y].newState = false;
+                tiles[x][y].height += 0.05;
+            }
+
+            else if ( !tiles[x][y].alive && 
+                        ( 
+                         // birth:
+                         n == 3 ||
+                         n == 5 ||
+                         n == 6) )
+            {
+                tiles[x][y].newState = true;
+                tiles[x][y].height += 0.05;
             }
             
-            else if ( !tiles[x][y].alive && n == 3 )
-            {
-                tiles[x][y].alive = true;
-                tiles[x][y].height -= 0.05;
-            }
-            
+        }
+    }
+    
+    for ( int x = 1 ; x < mapSize - 1 ; x++ )
+    {
+        for (int y = 1 ; y < mapSize - 1 ; y++ )
+        {
+            tiles[x][y].alive = tiles[x][y].newState;
         }
     }
 }
 
 void Map::toggleView()
 {
-    viewConway = !viewConway;
+    viewLife = !viewLife;
 }
 
 void Map::draw()
@@ -92,7 +127,7 @@ void Map::draw()
         {
             float c = tiles[x][y].height;
 
-            if ( viewConway )
+            if ( viewLife )
             {
                 if ( !tiles[x][y].alive )
                     ci::gl::color( 1.0, 1.0, 1.0 );
@@ -102,7 +137,7 @@ void Map::draw()
             
             else
             {
-                ci::gl::color( 0, 1.0 - c, c * 0.9 );
+                ci::gl::color( 0, c, ( 1 - c ) * 0.9 );
             }
             
             ci::gl::drawCube(   ci::Vec3f( tiles[x][y].x , tiles[x][y].y, 0 ), 
