@@ -1,10 +1,8 @@
 // include local files first, to make sure they include everything they need:
-#include "Tile.h"
+#include "map.h"
 
 #include "cinder/app/AppBasic.h"
 #include "cinder/gl/gl.h"
-
-#include <algorithm>
 
 using namespace ci;
 using namespace ci::app;
@@ -23,9 +21,7 @@ public:
 
 private:    
     bool wireframe;
-    
-    static const int mapSize = 30;
-    Tile tiles[mapSize][mapSize];
+    Map map;
 };
 
 void mapgenApp::setup()
@@ -36,22 +32,7 @@ void mapgenApp::setup()
     
     wireframe = false;
 
-    // GRIDCODE:
-    
-    // space the tiles along the smaller dimension to make sure
-    // that they are all visible:
-    int spacing = std::min( getWindowWidth(), getWindowHeight() ) / mapSize;
-    
-    for ( int x = 0 ; x < mapSize ; x++ )
-    {
-        for (int y = 0 ; y < mapSize ; y++ )
-        {
-            // space the tiles evenly with an offset of
-            // 0.5 spacing to center the grid:
-            tiles[x][y].x = x * spacing + 0.5 * spacing;
-            tiles[x][y].y = y * spacing + 0.5 * spacing;
-        }
-    }
+    map.positionTiles( getWindowWidth(), getWindowHeight() );
 }
 
 void mapgenApp::mouseDown( MouseEvent event )
@@ -88,7 +69,7 @@ void mapgenApp::keyUp( KeyEvent event )
 
 void mapgenApp::resize( ResizeEvent event )
 {
-    // realign the tiles.
+    map.positionTiles( getWindowWidth(), getWindowHeight() );
 }
 
 void mapgenApp::update()
@@ -98,21 +79,8 @@ void mapgenApp::update()
 void mapgenApp::draw()
 {
 	clear();
-    
-    
-    // GRIDCODE:
-    // make the size slightly smaller than the spacing 
-    // to distinguish them from each other:
-    int size = std::min( getWindowWidth(), getWindowHeight() ) / mapSize * 0.9;
-    
-    for ( int x = 0 ; x < mapSize ; x++ )
-    {
-        for (int y = 0 ; y < mapSize ; y++ )
-        {
-            drawCube(   Vec3f( tiles[x][y].x , tiles[x][y].y, 0 ), 
-                        Vec3f( size, size, size ) );
-        }
-    }
+    map.draw();
+
 }
 
 
