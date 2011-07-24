@@ -14,10 +14,12 @@
 class Map
 {
 public:
-    void positionTiles( int w, int h );
+    Map();
+    void setup( int w, int h );
     void draw();
+    void update();
 private: 
-    static const int mapSize = 60;
+    static const int mapSize = 100;
     Tile tiles[mapSize][mapSize];
     int spacing;
 };

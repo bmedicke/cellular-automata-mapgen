@@ -3,6 +3,7 @@
 
 #include "cinder/app/AppBasic.h"
 #include "cinder/gl/gl.h"
+#include "cinder/CinderMath.h"
 
 using namespace ci;
 using namespace ci::app;
@@ -21,18 +22,19 @@ public:
 
 private:    
     bool wireframe;
+    int framerate;
     Map map;
 };
 
 void mapgenApp::setup()
 {
     setWindowSize( 800, 800 );
-    setFrameRate( 60.0f );
+    framerate = 5;
     setFullScreen( false );
     
     wireframe = false;
 
-    map.positionTiles( getWindowWidth(), getWindowHeight() );
+    map.setup( getWindowWidth(), getWindowHeight() );
 }
 
 void mapgenApp::mouseDown( MouseEvent event )
@@ -57,6 +59,19 @@ void mapgenApp::keyDown( KeyEvent event )
             else
                 setFullScreen( true );
             break;
+        
+        case KeyEvent::KEY_r:
+            map.setup( getWindowWidth(), getWindowHeight() );
+            
+        case KeyEvent::KEY_p:
+            framerate++;
+            framerate = ci::math<int>::clamp ( framerate, 1, 60 );
+            break;
+        
+        case KeyEvent::KEY_o:
+            framerate--;
+            framerate = ci::math<int>::clamp ( framerate, 1, 60 );
+            break;
             
         default:
             break;
@@ -69,11 +84,13 @@ void mapgenApp::keyUp( KeyEvent event )
 
 void mapgenApp::resize( ResizeEvent event )
 {
-    map.positionTiles( getWindowWidth(), getWindowHeight() );
+    // reposition camera to show all tiles.
 }
 
 void mapgenApp::update()
 {
+    setFrameRate( framerate );
+    map.update();
 }
 
 void mapgenApp::draw()
