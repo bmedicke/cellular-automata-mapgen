@@ -17,10 +17,11 @@
 
 Map::Map()
 {
+    viewConway = false;
 }
 
 void Map::setup( int w, int h )
-{
+{    
     // space the tiles along the smaller dimension to make sure
     // that they are all visible:
     spacing = std::min( w, h ) / mapSize;
@@ -34,14 +35,10 @@ void Map::setup( int w, int h )
             tiles[x][y].x = x * spacing + 0.5 * spacing;
             tiles[x][y].y = y * spacing + 0.5 * spacing;
             
+            tiles[x][y].height = 1.0;
+            
             // set 5 percent of the initial tiles to alive:
-            tiles[x][y].alive = ci::Rand::randFloat() < 0.05 ? 1 : 0;
-            
-            // set the border tiles to dead:
-            if (    x == 0 || x == mapSize || 
-                    y == 0 || y == mapSize )
-                tiles[x][y].alive = false;
-            
+            tiles[x][y].alive = ci::Rand::randFloat() < 0.05 ? 1 : 0;            
         }
     }
 }
@@ -67,32 +64,49 @@ void Map::update()
             if ( tiles[x + 1][y + 1].alive ) n++;
             
             if ( tiles[x][y].alive && ( n < 2 || n > 3 ) )
+            {
                 tiles[x][y].alive = false;
+                tiles[x][y].height -= 0.05;
+            }
             
             else if ( !tiles[x][y].alive && n == 3 )
+            {
                 tiles[x][y].alive = true;
+                tiles[x][y].height -= 0.05;
+            }
             
         }
     }
 }
 
-void Map::draw()
+void Map::toggleView()
 {
-    // make the size slightly smaller than the spacing 
-    // to better distinguish them from each other:
-    int size = spacing * 0.9;
-    
+    viewConway = !viewConway;
+}
+
+void Map::draw()
+{    
     for ( int x = 0 ; x < mapSize ; x++ )
     {
         for (int y = 0 ; y < mapSize ; y++ )
         {
-            if ( !tiles[x][y].alive )
-                ci::gl::color( 1.0, 1.0, 1.0 );
+            float c = tiles[x][y].height;
+
+            if ( viewConway )
+            {
+                if ( !tiles[x][y].alive )
+                    ci::gl::color( 1.0, 1.0, 1.0 );
+                else
+                    ci::gl::color( 0.0, 0.0, 0.0);
+            }
+            
             else
-                ci::gl::color( 0.0, 0.0, 0.0);
+            {
+                ci::gl::color( 0, 1.0 - c, c * 0.9 );
+            }
             
             ci::gl::drawCube(   ci::Vec3f( tiles[x][y].x , tiles[x][y].y, 0 ), 
-                                ci::Vec3f( size, size, size ) );
+                                ci::Vec3f( spacing, spacing, spacing ) );
         }
     }
 }

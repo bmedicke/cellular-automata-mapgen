@@ -13,6 +13,7 @@ struct Tile
 {
     float x, y;
     bool alive;
+    float height;
 };
 
 #endif

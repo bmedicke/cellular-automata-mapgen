@@ -22,6 +22,7 @@ public:
 
 private:    
     bool wireframe;
+    bool pause;
     int framerate;
     Map map;
 };
@@ -29,10 +30,11 @@ private:
 void mapgenApp::setup()
 {
     setWindowSize( 800, 800 );
-    framerate = 5;
+    framerate = 60;
     setFullScreen( false );
     
     wireframe = false;
+    pause = false;
 
     map.setup( getWindowWidth(), getWindowHeight() );
 }
@@ -62,6 +64,16 @@ void mapgenApp::keyDown( KeyEvent event )
         
         case KeyEvent::KEY_r:
             map.setup( getWindowWidth(), getWindowHeight() );
+            pause = false;
+            break;
+            
+        case KeyEvent::KEY_SPACE:
+            pause = !pause;
+            break;
+        
+        case KeyEvent::KEY_m:
+            map.toggleView();
+            break;
             
         case KeyEvent::KEY_p:
             framerate++;
@@ -90,7 +102,9 @@ void mapgenApp::resize( ResizeEvent event )
 void mapgenApp::update()
 {
     setFrameRate( framerate );
-    map.update();
+    
+    if ( !pause )
+        map.update();
 }
 
 void mapgenApp::draw()

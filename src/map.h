@@ -18,10 +18,12 @@ public:
     void setup( int w, int h );
     void draw();
     void update();
+    void toggleView();
 private: 
     static const int mapSize = 100;
     Tile tiles[mapSize][mapSize];
     int spacing;
+    bool viewConway;
 };
 
 #endif
