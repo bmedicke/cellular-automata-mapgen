@@ -29,14 +29,26 @@ class Map
 public:
     Map();
     void setup( int w, int h );
-    void draw();
+    void reset();
     void update();
-    void toggleView();
-private: 
+    void draw();
+    
+    void toggleView();                  // toggles the view mode.
+    bool setHeightChange( float h );    // 0.0 - 1.0 .
+    bool setInitialLife( float i );     // 0.0 - 1.0 .
+    
+    float getHeightChange();
+    float getInitialLife();
+    
+private:
+    bool isZeroToOne( float f ); // checks if float is between 0.0 and 1.0 .
+    
     static const int mapSize = 100;
     Tile tiles[mapSize][mapSize];
     int spacing;
-    bool viewLife;
+    bool viewLife;      // defines if game of life view mode is active.
+    float heightChange; // how much the height changes for every death/birth.
+    float initialLife;  // percentage of the initial tiles that are alive.
 };
 
 #endif

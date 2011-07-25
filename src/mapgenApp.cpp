@@ -25,6 +25,8 @@ private:
     bool pause;
     int framerate;
     Map map;
+    float heightChange;
+    float initialLife;
 };
 
 void mapgenApp::setup()
@@ -35,6 +37,9 @@ void mapgenApp::setup()
     
     wireframe = false;
     pause = false;
+    
+    heightChange = map.getHeightChange();
+    initialLife = map.getInitialLife();
 
     map.setup( getWindowWidth(), getWindowHeight() );
 }
@@ -47,14 +52,16 @@ void mapgenApp::keyDown( KeyEvent event )
 {
     switch ( event.getCode() ) {
             
-        case KeyEvent::KEY_w:
+        // show/hide wireframes:
+        case KeyEvent::KEY_i:
             wireframe = !wireframe;
             if ( wireframe )
                 enableWireframe();
             else
                 disableWireframe();
             break;
-            
+        
+        // toggle fullscreen:
         case KeyEvent::KEY_f:
             if ( isFullScreen() )
                 setFullScreen( false );
@@ -62,29 +69,62 @@ void mapgenApp::keyDown( KeyEvent event )
                 setFullScreen( true );
             break;
         
+        // start a new map and unpause the game:
         case KeyEvent::KEY_r:
-            map.setup( getWindowWidth(), getWindowHeight() );
+            map.reset();
             pause = false;
             break;
-            
+        
+        // toggle pause:
         case KeyEvent::KEY_SPACE:
             pause = !pause;
             break;
         
+        // toggle view mode:
         case KeyEvent::KEY_m:
             map.toggleView();
             break;
-            
+        
+        // speed up simulation:
         case KeyEvent::KEY_p:
             framerate++;
             framerate = ci::math<int>::clamp ( framerate, 1, 60 );
             break;
         
+        // slow down simulation:
         case KeyEvent::KEY_o:
             framerate--;
             framerate = ci::math<int>::clamp ( framerate, 1, 60 );
             break;
+        
+        // increase the height change:
+        case KeyEvent::KEY_k:
+            heightChange += 0.02;
+            map.setHeightChange( ci::math<float>::clamp 
+                                ( heightChange, 0.02, 1.0 ) );
+            break;
             
+        // decrease the height change:
+        case KeyEvent::KEY_j:
+            heightChange -= 0.02;
+            map.setHeightChange( ci::math<float>::clamp 
+                                ( heightChange, 0.02, 1.0 ) );
+            break;
+            
+        // increase the initial life:
+        case KeyEvent::KEY_h:
+            initialLife += 0.02;
+            map.setInitialLife( ci::math<float>::clamp 
+                                ( initialLife, 0.02, 1.0 ) );
+            break;
+            
+        // decrease the initial life:
+        case KeyEvent::KEY_g:
+            initialLife -= 0.02;
+            map.setInitialLife( ci::math<float>::clamp 
+                                ( initialLife, 0.02, 1.0 ) );
+            break;
+        
         default:
             break;
     }
