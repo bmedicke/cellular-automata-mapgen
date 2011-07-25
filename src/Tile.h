@@ -11,10 +11,9 @@
 
 struct Tile
 {
-    float x, y;
+    float x, y, z;
     bool alive;
     bool newState;
-    float height;
 };
 
 #endif

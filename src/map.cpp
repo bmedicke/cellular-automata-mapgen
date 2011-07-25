@@ -49,7 +49,7 @@ void Map::reset()
             tiles[x][y].y = y * size - height / 2.0f;
             
             // start out with water everywhere:
-            tiles[x][y].height = 0.0f;
+            tiles[x][y].z = 0.0f;
             
             // set a percentage of the initial tiles to alive:
             tiles[x][y].alive = ci::Rand::randFloat() < initialLife ? 1 : 0;
@@ -89,7 +89,7 @@ void Map::draw()
     {
         for (int y = 0 ; y < mapSize ; y++ )
         {
-            float h = tiles[x][y].height;
+            float h = tiles[x][y].z;
             
             // game of life view mode:
             
@@ -125,7 +125,7 @@ void Map::draw()
             
             // make sure mountains don't grow too big:
             float maxH = 
-                ci::math<float>::clamp( tiles[x][y].height * heightMultiplier,
+                ci::math<float>::clamp( tiles[x][y].z * heightMultiplier,
                                         0.0f, maxHeight );
             
             ci::Vec3f pos = ci::Vec3f(tiles[x][y].x, tiles[x][y].y, maxH );
@@ -181,7 +181,7 @@ void Map::applyRules( int x, int y, int n )
           n == 5 ) )
     {
         tiles[x][y].newState = false;
-        tiles[x][y].height += heightChange;
+        tiles[x][y].z += heightChange;
     }
     
     else if ( !tiles[x][y].alive && 
@@ -191,7 +191,7 @@ void Map::applyRules( int x, int y, int n )
               n == 6 ) )
     {
         tiles[x][y].newState = true;
-        tiles[x][y].height += heightChange;
+        tiles[x][y].z += heightChange;
     }
 }
 

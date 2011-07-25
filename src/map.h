@@ -33,7 +33,7 @@ public:
     void update();
     void draw();
     
-    void setMapView( bool b);           // toggles the view mode.
+    void setMapView( bool b);
     bool setHeightChange( float h );    // 0.0f - 1.0f .
     bool setInitialLife( float i );     // 0.0f - 1.0f .
     
