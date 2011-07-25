@@ -3,9 +3,8 @@
 
 #include "cinder/app/AppBasic.h"
 #include "cinder/gl/gl.h"
-#include "cinder/CinderMath.h"
-
-#include <sstream>
+#include "cinder/Camera.h"
+#include "cinder/params/Params.h"
 
 using namespace ci;
 using namespace ci::app;
@@ -23,33 +22,56 @@ public:
 	void draw();
 
 private:
-    void updateMenu();
-    void drawMenu();
-    bool wireframe;
+    
     bool pause;
+    bool mapView;
     int framerate;
     float heightChange;
     float initialLife;
     Map map;
     
-    bool info;
-    float infoFontSize;
-    std::string infoString[8];
-    Font infoFont;
+    // params:
+    params::InterfaceGl params;
+    
+    // camera:
+    CameraPersp camera;
+    Vec3f eye, center, up;
+    float cameraDistance;
+    Quatf sceneRotation;
+    
 };
 
 void mapgenApp::setup()
 {
+    // setup camera:
+    cameraDistance = 500.0f;
+    eye = Vec3f( 0.0f, 0.0f, cameraDistance );
+    center = Vec3f::zero();
+    up = Vec3f::yAxis();
+    camera.setPerspective( 75.0f, getWindowAspectRatio(), 5.0f, 2000.0f );
+    
+    // setup params:
+    params = params::InterfaceGl( "Game of Life", Vec2i( 240, 220 ) );
+    params.addParam( "Scene Rotation", &sceneRotation, "opened=1" );
+    params.addSeparator();
+    params.addParam( "Eye Distance", &cameraDistance, 
+                     "min=50.0 max=1500 step=10 keyIncr=s keyDecr=w" );
+    params.addParam( "Simulation Speed", &framerate,
+                     "min=1 max=100 step=1 keyIncr=p keyDecr=o" );
+    params.addParam( "Height Change", &heightChange,
+                     "min=0.02f max=1.0f step=0.02f keyIncr=h keyDecr=b" );
+    params.addParam( "Initial Life", &initialLife,
+                    "min=0.02f max=1.0f step=0.02f keyIncr=j keyDecr=n" );
+    params.addParam( "Pause", &pause,"keyincr=space" );
+    params.addParam( "Map View", &mapView,"keyincr=m" );
+    
+    // setup window:
     setWindowSize( 800, 800 );
     framerate = 60;
     setFullScreen( false );
     
-    wireframe = false;
     pause = false;
-    
-    info = true;
-    infoFontSize = 20.0;    
-    infoFont = Font( loadResource( "Andale Mono.ttf"), infoFontSize );
+    mapView = true;
     
     heightChange = map.getHeightChange();
     initialLife = map.getInitialLife();
@@ -64,11 +86,6 @@ void mapgenApp::mouseDown( MouseEvent event )
 void mapgenApp::keyDown( KeyEvent event )
 {
     switch ( event.getCode() ) {
-            
-        // toggle info overlay:
-        case KeyEvent::KEY_i:
-            info = !info;
-            break;
         
         // toggle fullscreen:
         case KeyEvent::KEY_f:
@@ -89,51 +106,6 @@ void mapgenApp::keyDown( KeyEvent event )
             pause = !pause;
             break;
         
-        // toggle view mode:
-        case KeyEvent::KEY_m:
-            map.toggleView();
-            break;
-        
-        // speed up simulation:
-        case KeyEvent::KEY_p:
-            framerate++;
-            framerate = ci::math<int>::clamp ( framerate, 1, 60 );
-            break;
-        
-        // slow down simulation:
-        case KeyEvent::KEY_o:
-            framerate--;
-            framerate = ci::math<int>::clamp ( framerate, 1, 60 );
-            break;
-        
-        // increase the height change:
-        case KeyEvent::KEY_k:
-            heightChange += 0.02;
-            heightChange = ci::math<float>::clamp ( heightChange, 0.02, 1.0 );
-            map.setHeightChange( heightChange );
-            break;
-            
-        // decrease the height change:
-        case KeyEvent::KEY_j:
-            heightChange -= 0.02;
-            heightChange = ci::math<float>::clamp ( heightChange, 0.02, 1.0 );
-            map.setHeightChange( heightChange );
-            break;
-            
-        // increase the initial life:
-        case KeyEvent::KEY_h:
-            initialLife += 0.02;
-            initialLife = ci::math<float>::clamp ( initialLife, 0.02, 1.0 );
-            map.setInitialLife( initialLife );
-            break;
-            
-        // decrease the initial life:
-        case KeyEvent::KEY_g:
-            initialLife -= 0.02;
-            initialLife = ci::math<float>::clamp ( initialLife, 0.02, 1.0 );
-            map.setInitialLife( initialLife );
-            break;
-        
         default:
             break;
     }
@@ -152,65 +124,33 @@ void mapgenApp::update()
 {
     setFrameRate( framerate );
     
+    map.setInitialLife( initialLife );
+    map.setHeightChange( heightChange );
+    
+    
+    map.setMapView( mapView );
+    
     if ( !pause )
         map.update();
     
-    updateMenu();
+    // update camera:
+    eye = Vec3f( 0.0f, 0.0f, cameraDistance );
+    camera.lookAt( eye, center, up );
+    gl::setMatrices( camera );
+    gl::rotate( sceneRotation );
     
 }
 
 void mapgenApp::draw()
 {
-	clear();
+    clear( Color( 0.0f, 0.0f, 0.7f ) );
+    gl::enableDepthRead();
+	gl::enableDepthWrite();
+    
     map.draw();
     
-    if ( info )
-        drawMenu();
-}
-
-void mapgenApp::updateMenu()
-{
-    std::stringstream ss;
-    
-    ss << "toggle info (i)";
-    infoString[0] = ss.str();
-    ss.str("");
-    ss << "toggle fullscreen (f)";
-    infoString[1] = ss.str();
-    ss.str("");
-    ss << "toggle view mode (m)";
-    infoString[2] = ss.str();
-    ss.str("");
-    ss << "new game (r)";
-    infoString[3] = ss.str();
-    ss.str("");
-    ss << "pause (space): " << pause;
-    infoString[4] = ss.str();
-    ss.str("");
-    ss << "control speed (o/p): " << getFrameRate();
-    infoString[5] = ss.str();
-    ss.str("");
-    ss << "height change (j/k): " << heightChange;
-    infoString[6] = ss.str();
-    ss.str("");
-    ss << "initial life (g/h): " << initialLife;
-    infoString[7] = ss.str();
-    ss.str("");
-}
-
-void mapgenApp::drawMenu()
-{
-    Color color( 1.0, 1.0, 1.0 );
-    float padding = 1.3;
-    
-    for ( int i = 0 ; i < 8 ; i++ )
-    {
-        Vec2f position = Vec2f( getWindowWidth() / 2, 
-                               getWindowHeight() - 
-                               infoFontSize * padding * ( i + 1 ) );
-        drawStringCentered( infoString[i], position, color, infoFont );
-        
-    }
+    // draw params window:
+    params::InterfaceGl::draw();
 }
 
 CINDER_APP_BASIC( mapgenApp, RendererGl )

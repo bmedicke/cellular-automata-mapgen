@@ -33,9 +33,9 @@ public:
     void update();
     void draw();
     
-    void toggleView();                  // toggles the view mode.
-    bool setHeightChange( float h );    // 0.0 - 1.0 .
-    bool setInitialLife( float i );     // 0.0 - 1.0 .
+    void setMapView( bool b);           // toggles the view mode.
+    bool setHeightChange( float h );    // 0.0f - 1.0f .
+    bool setInitialLife( float i );     // 0.0f - 1.0f .
     
     float getHeightChange();
     float getInitialLife();
@@ -45,12 +45,17 @@ private:
     int countAliveNeighbours( int x, int y );
     void applyRules( int x, int y, int n );
     
+    int width;
+    int height;
+    
     static const int mapSize = 100;
     Tile tiles[mapSize][mapSize];
-    int spacing;
-    bool viewLife;      // defines if game of life view mode is active.
-    float heightChange; // how much the height changes for every death/birth.
-    float initialLife;  // percentage of the initial tiles that are alive.
+    int size;
+    bool viewMap;           // defines if map view mode is active.
+    float heightChange;     // how much the height changes for every death/birth.
+    float heightMultiplier; // how fast the cells gain height.
+    float maxHeight;        // highest possible mountain.
+    float initialLife;      // percentage of the initial tiles that are alive.
 };
 
 #endif

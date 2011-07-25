@@ -12,22 +12,27 @@
 
 #include "cinder/gl/gl.h"
 #include "cinder/Rand.h"
+#include "cinder/CinderMath.h"
 
 #include <algorithm>
 
 Map::Map()
 {
-    heightChange = 0.05;
-    initialLife = 0.8;
-    viewLife = false;
-    spacing = 10.0;
+    heightChange = 0.04f;
+    heightMultiplier = 20.0f;
+    maxHeight = 50.0f;
+    initialLife = 0.12f;
+    viewMap = true;
+    size = 10;
+    width = 800;
+    height = 800;
 }
 
 void Map::setup( int w, int h )
 {
     // space the tiles along the smaller dimension to make sure
     // that they are all visible:
-    spacing = std::min( w, h ) / mapSize;
+    size = std::min( width, height ) / mapSize;
     
     reset();
 }
@@ -38,13 +43,13 @@ void Map::reset()
     {
         for (int y = 0 ; y < mapSize ; y++ )
         {
-            // space the tiles evenly with an offset of
-            // 0.5 spacing to center the grid:
-            tiles[x][y].x = x * spacing + 0.5 * spacing;
-            tiles[x][y].y = y * spacing + 0.5 * spacing;
+            // space the tiles evenly with an offset to
+            // center them on the map
+            tiles[x][y].x = x * size - width / 2.0f;
+            tiles[x][y].y = y * size - height / 2.0f;
             
             // start out with water everywhere:
-            tiles[x][y].height = 0.0;
+            tiles[x][y].height = 0.0f;
             
             // set a percentage of the initial tiles to alive:
             tiles[x][y].alive = ci::Rand::randFloat() < initialLife ? 1 : 0;
@@ -89,23 +94,35 @@ void Map::draw()
             float h = tiles[x][y].height;
             
             // game of life view mode:
-            if ( viewLife )
+            if ( !viewMap )
             {
                 if ( tiles[x][y].alive )
-                    ci::gl::color( 0.0, 0.0, 0.0 );
+                    ci::gl::color( 0.0f, 0.0f, 0.0f );
                 else
-                    ci::gl::color( 1.0, 1.0, 1.0);
+                    ci::gl::color( 1.0f, 1.0f, 1.0f);
             }
             
             // map view mode:
             else
             {
-                // fade from blue to green the heigher a tile is:
-                ci::gl::color( 0.0, h, ( 1.0 - h ) * 0.9 );
+                if ( h < 0.5f )
+                    ci::gl::color( h * 1.5f, h * 2.0f , 1.0f - (h * 2.0f) );
+                
+                else if ( h < 1.5f )
+                    ci::gl::color( 1 - h, h * 0.9, 1 - h );
+                
+                else
+                    ci::gl::color( h / 1.8, h / 1.8, h / 2 );
+                
             }
             
-            ci::gl::drawCube(   ci::Vec3f( tiles[x][y].x , tiles[x][y].y, 0 ), 
-                                ci::Vec3f( spacing, spacing, spacing ) );
+            float maxH = 
+                ci::math<float>::clamp( tiles[x][y].height * heightMultiplier,
+                                        0.0f, maxHeight );
+            
+            ci::Vec3f pos = ci::Vec3f(tiles[x][y].x, tiles[x][y].y, maxH );
+            
+            ci::gl::drawCube( pos, ci::Vec3f( size, size, maxHeight ) );
         }
     }
 }
@@ -142,14 +159,15 @@ void Map::applyRules( int x, int y, int n )
     // great examples are (S/B):
     // 2x2: 125/36
     // conway's: 23/3
-    // mine: 1258/357, 23/356
+    // mine: 125/36, 23/356
     
     
     if ( tiles[x][y].alive &&
         !( 
           // survival: 
+          n == 1 ||
           n == 2 ||
-          n == 3 ) )
+          n == 5 ) )
     {
         tiles[x][y].newState = false;
         tiles[x][y].height += heightChange;
@@ -159,17 +177,16 @@ void Map::applyRules( int x, int y, int n )
              ( 
               // birth:
               n == 3 ||
-              n == 5 ||
-              n == 6) )
+              n == 6 ) )
     {
         tiles[x][y].newState = true;
         tiles[x][y].height += heightChange;
     }
 }
 
-void Map::toggleView()
+void Map::setMapView( bool b)
 {
-    viewLife = !viewLife;
+    viewMap = b;
 }
 
 bool Map::setHeightChange( float h )
@@ -208,7 +225,7 @@ float Map::getInitialLife()
 
 bool Map::isZeroToOne( float f )
 {
-    if ( f <= 1.0 && f >= 0.0 )
+    if ( f <= 1.0f && f >= 0.0f )
         return true;
     else
         return false;
