@@ -5,6 +5,8 @@
 #include "cinder/gl/gl.h"
 #include "cinder/CinderMath.h"
 
+#include <sstream>
+
 using namespace ci;
 using namespace ci::app;
 using namespace ci::gl;
@@ -20,13 +22,20 @@ public:
 	void update();
 	void draw();
 
-private:    
+private:
+    void updateMenu();
+    void drawMenu();
     bool wireframe;
     bool pause;
     int framerate;
-    Map map;
     float heightChange;
     float initialLife;
+    Map map;
+    
+    bool info;
+    float infoFontSize;
+    std::string infoString[8];
+    Font infoFont;
 };
 
 void mapgenApp::setup()
@@ -37,6 +46,10 @@ void mapgenApp::setup()
     
     wireframe = false;
     pause = false;
+    
+    info = true;
+    infoFontSize = 20.0;    
+    infoFont = Font( loadResource( "Andale Mono.ttf"), infoFontSize );
     
     heightChange = map.getHeightChange();
     initialLife = map.getInitialLife();
@@ -52,13 +65,9 @@ void mapgenApp::keyDown( KeyEvent event )
 {
     switch ( event.getCode() ) {
             
-        // show/hide wireframes:
+        // toggle info overlay:
         case KeyEvent::KEY_i:
-            wireframe = !wireframe;
-            if ( wireframe )
-                enableWireframe();
-            else
-                disableWireframe();
+            info = !info;
             break;
         
         // toggle fullscreen:
@@ -100,29 +109,29 @@ void mapgenApp::keyDown( KeyEvent event )
         // increase the height change:
         case KeyEvent::KEY_k:
             heightChange += 0.02;
-            map.setHeightChange( ci::math<float>::clamp 
-                                ( heightChange, 0.02, 1.0 ) );
+            heightChange = ci::math<float>::clamp ( heightChange, 0.02, 1.0 );
+            map.setHeightChange( heightChange );
             break;
             
         // decrease the height change:
         case KeyEvent::KEY_j:
             heightChange -= 0.02;
-            map.setHeightChange( ci::math<float>::clamp 
-                                ( heightChange, 0.02, 1.0 ) );
+            heightChange = ci::math<float>::clamp ( heightChange, 0.02, 1.0 );
+            map.setHeightChange( heightChange );
             break;
             
         // increase the initial life:
         case KeyEvent::KEY_h:
             initialLife += 0.02;
-            map.setInitialLife( ci::math<float>::clamp 
-                                ( initialLife, 0.02, 1.0 ) );
+            initialLife = ci::math<float>::clamp ( initialLife, 0.02, 1.0 );
+            map.setInitialLife( initialLife );
             break;
             
         // decrease the initial life:
         case KeyEvent::KEY_g:
             initialLife -= 0.02;
-            map.setInitialLife( ci::math<float>::clamp 
-                                ( initialLife, 0.02, 1.0 ) );
+            initialLife = ci::math<float>::clamp ( initialLife, 0.02, 1.0 );
+            map.setInitialLife( initialLife );
             break;
         
         default:
@@ -136,7 +145,7 @@ void mapgenApp::keyUp( KeyEvent event )
 
 void mapgenApp::resize( ResizeEvent event )
 {
-    // reposition camera to show all tiles.
+    // TODO: reposition camera to show all tiles.
 }
 
 void mapgenApp::update()
@@ -145,14 +154,63 @@ void mapgenApp::update()
     
     if ( !pause )
         map.update();
+    
+    updateMenu();
+    
 }
 
 void mapgenApp::draw()
 {
 	clear();
     map.draw();
-
+    
+    if ( info )
+        drawMenu();
 }
 
+void mapgenApp::updateMenu()
+{
+    std::stringstream ss;
+    
+    ss << "toggle info (i)";
+    infoString[0] = ss.str();
+    ss.str("");
+    ss << "toggle fullscreen (f)";
+    infoString[1] = ss.str();
+    ss.str("");
+    ss << "toggle view mode (m)";
+    infoString[2] = ss.str();
+    ss.str("");
+    ss << "new game (r)";
+    infoString[3] = ss.str();
+    ss.str("");
+    ss << "pause (space): " << pause;
+    infoString[4] = ss.str();
+    ss.str("");
+    ss << "control speed (o/p): " << getFrameRate();
+    infoString[5] = ss.str();
+    ss.str("");
+    ss << "height change (j/k): " << heightChange;
+    infoString[6] = ss.str();
+    ss.str("");
+    ss << "initial life (g/h): " << initialLife;
+    infoString[7] = ss.str();
+    ss.str("");
+}
+
+void mapgenApp::drawMenu()
+{
+    Color color( 1.0, 1.0, 1.0 );
+    float padding = 1.3;
+    
+    for ( int i = 0 ; i < 8 ; i++ )
+    {
+        Vec2f position = Vec2f( getWindowWidth() / 2, 
+                               getWindowHeight() - 
+                               infoFontSize * padding * ( i + 1 ) );
+        drawStringCentered( infoString[i], position, color, infoFont );
+        
+    }
+}
 
 CINDER_APP_BASIC( mapgenApp, RendererGl )

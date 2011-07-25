@@ -42,6 +42,8 @@ public:
     
 private:
     bool isZeroToOne( float f ); // checks if float is between 0.0 and 1.0 .
+    int countAliveNeighbours( int x, int y );
+    void applyRules( int x, int y, int n );
     
     static const int mapSize = 100;
     Tile tiles[mapSize][mapSize];

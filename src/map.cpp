@@ -17,7 +17,7 @@
 
 Map::Map()
 {
-    heightChange = 0.04;
+    heightChange = 0.05;
     initialLife = 0.8;
     viewLife = false;
     spacing = 10.0;
@@ -61,56 +61,10 @@ void Map::update()
     {
         for (int y = 1 ; y < mapSize - 1 ; y++ )
         {
-            int n = 0;
             
-            // count neighbours that are alive:
+            int n = countAliveNeighbours( x, y );
             
-            if ( tiles[x - 1][y - 1].alive ) n++;
-            if ( tiles[x + 0][y - 1].alive ) n++;
-            if ( tiles[x + 1][y - 1].alive ) n++;
-            
-            if ( tiles[x - 1][y + 0].alive ) n++;
-            if ( tiles[x + 1][y + 0].alive ) n++;
-            
-            if ( tiles[x - 1][y + 1].alive ) n++;
-            if ( tiles[x + 0][y + 1].alive ) n++;
-            if ( tiles[x + 1][y + 1].alive ) n++;
-            
-            
-            // This is where the cellular automata rules are defined.
-            
-            // Rules are defined as:
-            // S: neighbours necessary to survive.
-            // B: neighbours necessary to be born.
-            
-            // For a big list of different rules visit:
-            // http://www.mirekw.com/ca/rullex_life.html
-            
-            // great examples are (S/B):
-            // 2x2: 125/36
-            // conway's: 23/3
-            // mine: 1258/357, 23/356
-            
-            if ( tiles[x][y].alive &&
-                !( 
-                        // survival: 
-                        n == 2 ||
-                        n == 3 ) )
-            {
-                tiles[x][y].newState = false;
-                tiles[x][y].height += 0.05;
-            }
-
-            else if ( !tiles[x][y].alive && 
-                        ( 
-                         // birth:
-                         n == 3 ||
-                         n == 5 ||
-                         n == 6) )
-            {
-                tiles[x][y].newState = true;
-                tiles[x][y].height += 0.05;
-            }
+            applyRules( x, y, n );
             
         }
     }
@@ -153,6 +107,63 @@ void Map::draw()
             ci::gl::drawCube(   ci::Vec3f( tiles[x][y].x , tiles[x][y].y, 0 ), 
                                 ci::Vec3f( spacing, spacing, spacing ) );
         }
+    }
+}
+
+int Map::countAliveNeighbours( int x, int y )
+{
+    int n = 0;
+    
+    if ( tiles[x - 1][y - 1].alive ) n++;
+    if ( tiles[x + 0][y - 1].alive ) n++;
+    if ( tiles[x + 1][y - 1].alive ) n++;
+    
+    if ( tiles[x - 1][y + 0].alive ) n++;
+    if ( tiles[x + 1][y + 0].alive ) n++;
+    
+    if ( tiles[x - 1][y + 1].alive ) n++;
+    if ( tiles[x + 0][y + 1].alive ) n++;
+    if ( tiles[x + 1][y + 1].alive ) n++;
+    
+    return n;
+}
+
+void Map::applyRules( int x, int y, int n )
+{
+    // This is where the cellular automata rules are defined.
+    
+    // Rules are defined as:
+    // S: neighbours necessary to survive.
+    // B: neighbours necessary to be born.
+    
+    // For a big list of different rules visit:
+    // http://www.mirekw.com/ca/rullex_life.html
+    
+    // great examples are (S/B):
+    // 2x2: 125/36
+    // conway's: 23/3
+    // mine: 1258/357, 23/356
+    
+    
+    if ( tiles[x][y].alive &&
+        !( 
+          // survival: 
+          n == 2 ||
+          n == 3 ) )
+    {
+        tiles[x][y].newState = false;
+        tiles[x][y].height += heightChange;
+    }
+    
+    else if ( !tiles[x][y].alive && 
+             ( 
+              // birth:
+              n == 3 ||
+              n == 5 ||
+              n == 6) )
+    {
+        tiles[x][y].newState = true;
+        tiles[x][y].height += heightChange;
     }
 }
 
