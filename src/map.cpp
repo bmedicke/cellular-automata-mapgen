@@ -65,17 +65,15 @@ void Map::update()
     for ( int x = 1 ; x < mapSize - 1 ; x++ )
     {
         for (int y = 1 ; y < mapSize - 1 ; y++ )
-        {
-            
+        { 
             int n = countAliveNeighbours( x, y );
             
             applyRules( x, y, n );
-            
         }
     }
     
     // now that we have counted all neighbours and determined the new states,
-    // we can actually change the alive-status of the cells:
+    // we can actually change the alive-states of the cells:
     for ( int x = 1 ; x < mapSize - 1 ; x++ )
     {
         for (int y = 1 ; y < mapSize - 1 ; y++ )
@@ -94,28 +92,38 @@ void Map::draw()
             float h = tiles[x][y].height;
             
             // game of life view mode:
-            if ( !viewMap )
+            
+            if ( viewMap )
             {
+                // fade from and to different colors depending on the height:
+                
+                // from blue to yellow:
+                if ( h < 0.5f )
+                    ci::gl::color( h * 1.5f, h * 2.0f , 1.0f - (h * 2.0f) );
+                
+                // to green:
+                else if ( h < 1.5f )
+                    ci::gl::color( 1.0f - h, h * 0.9f, 1.0f - h );
+                
+                // to white:
+                else
+                    ci::gl::color( h / 1.8f, h / 1.8f, h / 2.0f );
+            }
+            
+            // map view mode:
+            
+            else
+            {
+                // black for living cells:
                 if ( tiles[x][y].alive )
                     ci::gl::color( 0.0f, 0.0f, 0.0f );
+                
+                // white for dead cells:
                 else
                     ci::gl::color( 1.0f, 1.0f, 1.0f);
             }
             
-            // map view mode:
-            else
-            {
-                if ( h < 0.5f )
-                    ci::gl::color( h * 1.5f, h * 2.0f , 1.0f - (h * 2.0f) );
-                
-                else if ( h < 1.5f )
-                    ci::gl::color( 1 - h, h * 0.9, 1 - h );
-                
-                else
-                    ci::gl::color( h / 1.8, h / 1.8, h / 2 );
-                
-            }
-            
+            // make sure mountains don't grow too big:
             float maxH = 
                 ci::math<float>::clamp( tiles[x][y].height * heightMultiplier,
                                         0.0f, maxHeight );
@@ -131,13 +139,16 @@ int Map::countAliveNeighbours( int x, int y )
 {
     int n = 0;
     
+    // upper row:
     if ( tiles[x - 1][y - 1].alive ) n++;
     if ( tiles[x + 0][y - 1].alive ) n++;
     if ( tiles[x + 1][y - 1].alive ) n++;
     
+    // middle row:
     if ( tiles[x - 1][y + 0].alive ) n++;
     if ( tiles[x + 1][y + 0].alive ) n++;
     
+    // lower row:
     if ( tiles[x - 1][y + 1].alive ) n++;
     if ( tiles[x + 0][y + 1].alive ) n++;
     if ( tiles[x + 1][y + 1].alive ) n++;

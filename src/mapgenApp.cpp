@@ -1,4 +1,17 @@
-// include local files first, to make sure they include everything they need:
+//
+//  mapgenApp.cpp
+//  mapgenApp
+//
+//  Created by Benjamin Medicke on 24.07.11.
+//  Copyright 2011 Benjamin Medicke. All rights reserved.
+//
+
+// Additionally to the on screen menu this shortcuts are available:
+// space: pause/unpause simulation.
+// f: toggle fullscreen.
+// r: start a new map and unpause the game.
+
+// local files first, to make sure they include all dependencies they need:
 #include "map.h"
 
 #include "cinder/app/AppBasic.h"
@@ -87,7 +100,6 @@ void mapgenApp::keyDown( KeyEvent event )
 {
     switch ( event.getCode() ) {
         
-        // toggle fullscreen:
         case KeyEvent::KEY_f:
             if ( isFullScreen() )
                 setFullScreen( false );
@@ -95,13 +107,11 @@ void mapgenApp::keyDown( KeyEvent event )
                 setFullScreen( true );
             break;
         
-        // start a new map and unpause the game:
         case KeyEvent::KEY_r:
             map.reset();
             pause = false;
             break;
         
-        // toggle pause:
         case KeyEvent::KEY_SPACE:
             pause = !pause;
             break;
@@ -117,7 +127,6 @@ void mapgenApp::keyUp( KeyEvent event )
 
 void mapgenApp::resize( ResizeEvent event )
 {
-    // TODO: reposition camera to show all tiles.
 }
 
 void mapgenApp::update()
