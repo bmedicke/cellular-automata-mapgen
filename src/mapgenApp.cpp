@@ -6,11 +6,6 @@
 //  Copyright 2011 Benjamin Medicke. All rights reserved.
 //
 
-// Additionally to the on screen menu this shortcuts are available:
-// space: pause/unpause simulation.
-// f: toggle fullscreen.
-// r: start a new map and unpause the game.
-
 // local files first, to make sure they include all dependencies they need:
 #include "map.h"
 
@@ -64,9 +59,15 @@ void mapgenApp::setup()
     camera.setPerspective( 75.0f, getWindowAspectRatio(), 5.0f, 2000.0f );
     
     // setup params:
-    params = params::InterfaceGl( "Game of Life", Vec2i( 240, 220 ) );
+    params = params::InterfaceGl( "Game of Life", Vec2i( 240, 280 ) );
     params.addParam( "Scene Rotation", &sceneRotation, "opened=1" );
     params.addSeparator();
+    
+    params.addText( "reset game: r" );
+    params.addText( "pause/unpause: space" );
+    params.addText( "toggle fullscreen: f" );
+    params.addSeparator();
+    
     params.addParam( "Eye Distance", &cameraDistance, 
                      "min=50.0 max=1500 step=10 keyIncr=s keyDecr=w" );
     params.addParam( "Simulation Speed", &framerate,
